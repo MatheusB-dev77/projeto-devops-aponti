@@ -6,9 +6,9 @@ export default defineConfig({
   server: {
     port: 5173,
     open: true,
-    // Em desenvolvimento, chamadas para /api vão para a API (porta 3000)
+    // Em desenvolvimento, chamadas para /api vão para a API (porta 3333)
     proxy: {
-      '/api': 'http://localhost:3000',
+      '/api': 'http://localhost:3333',
     },
   },
 })
