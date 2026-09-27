@@ -21,3 +21,11 @@ output "frontend_url" {
 output "api_url" {
   value = "http://localhost:3333/health"
 }
+
+output "prometheus_url" {
+  value = "http://localhost:9090/targets"
+}
+
+output "grafana_url" {
+  value = "http://localhost:3001 (usuário: admin / senha: admin)"
+}

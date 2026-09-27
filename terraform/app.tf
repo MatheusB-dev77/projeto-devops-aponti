@@ -17,14 +17,27 @@ resource "docker_image" "redis" {
   keep_locally = true
 }
 
+# Consulta o Docker Hub para saber qual é a versão mais recente das imagens
+data "docker_registry_image" "api" {
+  name = "${var.dockerhub_user}/ecommerce-api:${var.image_tag}"
+}
+
+data "docker_registry_image" "frontend" {
+  name = "${var.dockerhub_user}/ecommerce-frontend:${var.image_tag}"
+}
+
+# Se a pipeline publicou uma imagem nova (digest diferente),
+# o Terraform baixa a imagem e recria o container automaticamente
 resource "docker_image" "api" {
-  name         = "${var.dockerhub_user}/ecommerce-api:${var.image_tag}"
-  keep_locally = true
+  name          = data.docker_registry_image.api.name
+  pull_triggers = [data.docker_registry_image.api.sha256_digest]
+  keep_locally  = true
 }
 
 resource "docker_image" "frontend" {
-  name         = "${var.dockerhub_user}/ecommerce-frontend:${var.image_tag}"
-  keep_locally = true
+  name          = data.docker_registry_image.frontend.name
+  pull_triggers = [data.docker_registry_image.frontend.sha256_digest]
+  keep_locally  = true
 }
 
 # ---------- Banco de dados ----------

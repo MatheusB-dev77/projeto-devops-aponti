@@ -1,0 +1,139 @@
+{
+  "uid": "shopadmin-api",
+  "title": "ShopAdmin - API em tempo real",
+  "tags": ["shopadmin", "api"],
+  "timezone": "browser",
+  "refresh": "5s",
+  "time": { "from": "now-15m", "to": "now" },
+  "schemaVersion": 39,
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Requisições por segundo",
+      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "reqps", "decimals": 2 }, "overrides": [] },
+      "targets": [
+        { "refId": "A", "expr": "sum(rate(http_requests_total{route!=\"/metrics\"}[1m]))" }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Tempo de resposta (p95)",
+      "gridPos": { "h": 5, "w": 6, "x": 6, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 3,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 0.3 },
+              { "color": "red", "value": 1 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        { "refId": "A", "expr": "histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket[1m])))" }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Taxa de erros (5xx)",
+      "gridPos": { "h": 5, "w": 6, "x": 12, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 0.05 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        { "refId": "A", "expr": "(sum(rate(http_requests_total{status_code=~\"5..\"}[1m])) or vector(0)) / clamp_min(sum(rate(http_requests_total[1m])), 0.0001)" }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "API no ar",
+      "gridPos": { "h": 5, "w": 6, "x": 18, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "0": { "text": "FORA DO AR", "color": "red" }, "1": { "text": "NO AR", "color": "green" } } }
+          ]
+        },
+        "overrides": []
+      },
+      "options": { "colorMode": "background" },
+      "targets": [
+        { "refId": "A", "expr": "up{job=\"ecommerce-api\"}" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Requisições por segundo por rota",
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 5 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] },
+      "targets": [
+        { "refId": "A", "expr": "sum by (method, route) (rate(http_requests_total{route!=\"/metrics\"}[1m]))", "legendFormat": "{{method}} {{route}}" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Tempo de resposta (p50 / p95 / p99)",
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 5 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "targets": [
+        { "refId": "A", "expr": "histogram_quantile(0.50, sum by (le) (rate(http_request_duration_seconds_bucket[1m])))", "legendFormat": "p50" },
+        { "refId": "B", "expr": "histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket[1m])))", "legendFormat": "p95" },
+        { "refId": "C", "expr": "histogram_quantile(0.99, sum by (le) (rate(http_request_duration_seconds_bucket[1m])))", "legendFormat": "p99" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Uso de CPU da API",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 14 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "percentunit", "min": 0 }, "overrides": [] },
+      "targets": [
+        { "refId": "A", "expr": "rate(process_cpu_seconds_total{job=\"ecommerce-api\"}[1m])", "legendFormat": "CPU" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Memória da API",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 14 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "bytes", "min": 0 }, "overrides": [] },
+      "targets": [
+        { "refId": "A", "expr": "process_resident_memory_bytes{job=\"ecommerce-api\"}", "legendFormat": "RAM (RSS)" },
+        { "refId": "B", "expr": "nodejs_heap_size_used_bytes{job=\"ecommerce-api\"}", "legendFormat": "Heap usado" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Respostas por status HTTP",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 14 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] },
+      "targets": [
+        { "refId": "A", "expr": "sum by (status_code) (rate(http_requests_total{route!=\"/metrics\"}[1m]))", "legendFormat": "{{status_code}}" }
+      ]
+    }
+  ]
+}

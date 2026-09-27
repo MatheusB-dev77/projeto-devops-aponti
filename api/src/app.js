@@ -8,6 +8,7 @@ const env = require('./config/env');
 const routes = require('./routes');
 const errorHandler = require('./middlewares/error-handler');
 const notFound = require('./middlewares/not-found');
+const { metricsMiddleware, metricsHandler } = require('./middlewares/metrics');
 
 const app = express();
 
@@ -16,6 +17,10 @@ app.use(helmet());
 
 // CORS
 app.use(cors());
+
+// Métricas para o Prometheus (antes do rate limit, para ele nunca ser bloqueado)
+app.use(metricsMiddleware);
+app.get('/metrics', metricsHandler);
 
 // Rate limiting
 if (!env.isTest()) {
